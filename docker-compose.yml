@@ -1,0 +1,113 @@
+# EducaFlex — Docker Compose
+#
+# MySQL (desenvolvimento local — recomendado):
+#   docker compose up -d mysql
+#
+# Stack completa (MySQL + API + Web):
+#   cp .env.example .env
+#   docker compose --profile full up -d --build
+#   cd backend && npm run db:setup   # primeira vez — migrations + seed
+#
+# CI mobile (Flutter analyze + test):
+#   docker compose --profile ci run --rm mobile-ci
+#
+# Referência: README.md · docs/PLANO-BACKEND.md · docs/ARQUITETURA.md
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-educaflex}
+      MYSQL_USER: ${MYSQL_USER:-educaflex}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-educaflex}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - educaflex_mysql:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD:-root}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3001}:3001"
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER:-educaflex}:${MYSQL_PASSWORD:-educaflex}@mysql:3306/${MYSQL_DATABASE:-educaflex}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      JWT_ACCESS_EXPIRES: ${JWT_ACCESS_EXPIRES:-8h}
+      INTEGRATIONS_MODE: ${INTEGRATIONS_MODE:-mock}
+      PORT: "3001"
+      NODE_ENV: ${NODE_ENV:-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3002,http://localhost:3000,http://localhost:8080}
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@educaflex.test}
+      RESET_PASSWORD_BASE_URL: ${RESET_PASSWORD_BASE_URL:-http://localhost:3002/recuperar-senha}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+    profiles:
+      - full
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3002}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+      NEXT_PUBLIC_USE_MOCK_API: ${NEXT_PUBLIC_USE_MOCK_API:-false}
+    depends_on:
+      api:
+        condition: service_healthy
+    profiles:
+      - full
+
+  mobile-ci:
+    image: ghcr.io/cirruslabs/flutter:stable
+    working_dir: /app
+    volumes:
+      - ./mobile:/app
+    command: >
+      sh -c "
+        flutter pub get &&
+        flutter analyze &&
+        flutter test --no-pub
+      "
+    profiles:
+      - ci
+
+volumes:
+  educaflex_mysql:

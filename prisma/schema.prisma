@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Setting {
+  id              String   @id @default("default")
+  mockMode        Boolean  @default(true)
+  openaiKey       String?
+  anthropicKey    String?
+  geminiKey       String?
+  ollamaBaseUrl   String   @default("http://localhost:11434")
+  agentModelsJson String   @default("{}")
+  updatedAt       DateTime @updatedAt
+}
+
+model Order {
+  id                String     @id @default(cuid())
+  name              String
+  problem           String
+  audience          String
+  businessRules     String
+  deliverableType   String
+  mobileStack       String
+  frontendStack     String
+  backendStack      String
+  databaseStack     String
+  generateTestBuild Boolean    @default(false)
+  status            String     @default("queued")
+  currentAgent      String?
+  errorMessage      String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  runs              AgentRun[]
+}
+
+model AgentRun {
+  id           String    @id @default(cuid())
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  agent        String
+  status       String    @default("pending")
+  model        String?
+  outputText   String    @default("")
+  errorMessage String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  sortOrder    Int
+}

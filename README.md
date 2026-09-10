@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fábrica de Software
 
-## Getting Started
+Plataforma web onde você descreve um app e uma **equipe virtual de agentes de IA** produz documentação de planejamento e/ou código empacotado em ZIP — com foco em MVPs testáveis.
 
-First, run the development server:
+| Versão | Escopo |
+|--------|--------|
+| **v1 (atual)** | Wizard de pedido, esteira de 6 agentes, entregas (ZIP/GitHub/APK), modo MOCK, multi-usuário |
+| **Produção (TI)** | Banco relacional, fila distribuída, SSO — após aprovação interna |
 
-```bash
+**Idioma:** PT-BR · **Stack:** Next.js 16 · **Dados locais:** `data/fabrica.json` + `storage/orders/`
+
+---
+
+## Início rápido
+
+### Pré-requisitos
+
+| Ferramenta | Versão |
+|------------|--------|
+| Node.js | 20+ |
+| npm | 10+ |
+
+### Subir a fábrica
+
+```powershell
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse **http://localhost:3000**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Login padrão (dev)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Configure em `.env` ou use os defaults:
 
-## Learn More
+| Variável | Default |
+|----------|---------|
+| `ADMIN_EMAIL` | `admin@fabrica.local` |
+| `ADMIN_PASSWORD` | `admin` |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Fluxo recomendado
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Novo pedido → Planejamento** — gera PRD, arquitetura, roadmap e backlog
+2. Revise o pacote na aba **Entregas**
+3. **Gerar software** a partir do planejamento (tipos B/C/D)
+4. Baixe o ZIP ou use GitHub/APK de teste
 
-## Deploy on Vercel
+**Atalho:** pedido **Software direto (MVP)** em 3 etapas, sem planejamento prévio.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Configurações
+
+Em **Configurações** (admin):
+
+- Chaves OpenAI, Anthropic, Gemini, Cursor, Ollama
+- Modelo por agente (PM, Arquiteto, Backend, …)
+- Modo **MOCK** — demonstração sem consumir tokens
+- GitHub, Vercel e URL pública (QR do APK na rede local)
+
+---
+
+## Comandos úteis
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run start` | Servidor após build |
+| `npm test` | Testes (Vitest) |
+| `npm run lint` | ESLint |
+
+---
+
+## Estrutura
+
+```
+fabrica-app/
+├── src/
+│   ├── app/              # Rotas Next.js (projetos, pedidos, configurações)
+│   ├── components/       # UI (wizard, esteira, entregas)
+│   └── lib/              # Agentes, pipeline, store, artefatos
+├── data/
+│   ├── fabrica.json      # Pedidos, usuários, configurações
+│   └── jobs.json         # Fila de jobs (pipeline, publish, apk)
+├── storage/orders/       # ZIPs e árvore de arquivos por pedido
+└── docs/superpowers/     # Spec v1, roadmap e planos da fábrica
+```
+
+Roadmap da plataforma: [`docs/superpowers/ROADMAP-FABRICA.md`](./docs/superpowers/ROADMAP-FABRICA.md)
+
+---
+
+## Apps gerados (exemplos)
+
+Pedidos concluídos podem gerar pastas como `backend/`, `frontend/`, `mobile/` dentro do ZIP — por exemplo **EducaFlex** (treinamento corporativo). Esses projetos têm README e scripts próprios dentro do pacote entregue; pastas `backend/`, `frontend/`, `mobile/` na raiz do repositório são outputs de pedidos anteriores.
+
+Documentação detalhada de um app gerado: [`docs/PRD.md`](./docs/PRD.md) e demais arquivos em `docs/`.
+
+---
+
+## Handoff para TI (futuro)
+
+Quando for para servidor corporativo, a equipe de TI deve provisionar:
+
+- Banco relacional (substituir `fabrica.json`)
+- Volume persistente para `storage/orders/`
+- Variáveis `SESSION_SECRET`, `FABRICA_ENCRYPTION_KEY`
+- Reverse proxy HTTPS
+- Política de chaves LLM e custos
+
+---
+
+## Licença
+
+Projeto interno — consulte o responsável legal da organização.

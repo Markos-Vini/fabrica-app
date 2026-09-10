@@ -30,8 +30,27 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+.env
+.env.local
+.env.*.local
+
+# sqlite e artefatos gerados
+/prisma/dev.db
+/prisma/dev.db-journal
+/storage
+/data
+/src/generated/prisma
+
+# leftovers de pedidos gerados na raiz (não fazem parte da plataforma)
+/backend
+/frontend
+/mobile
+*-output.json
+json-part*.txt
+educa*.json
+educaflex*.json
+calcfacil-output.json
 
 # vercel
 .vercel
@@ -39,3 +58,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
