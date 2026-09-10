@@ -17,12 +17,12 @@ export function stackRulesForAgent(agent: AgentId, order: OrderInput): string {
     if (includes(order.mobileStack, "flutter")) {
       parts.push(flutterStackRules(agent, order));
     } else if (includes(order.mobileStack, "react native")) {
-      parts.push(reactNativeStackRules(agent, order));
+      parts.push(reactNativeStackRules(agent));
     }
   }
 
   if (order.includeFrontend && includes(order.frontendStack, "next")) {
-    parts.push(nextJsStackRules(agent, order));
+    parts.push(nextJsStackRules(agent));
   }
 
   if (

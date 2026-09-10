@@ -193,7 +193,7 @@ export function projectDeliveryBadges(project: ProductProject): ProjectDeliveryB
     if (software.includeMobile && software.generateTestBuild) {
       badges.push({
         label: "APK",
-        ok: software.apkStatus === "success",
+        ok: software.apkStatus === "ready",
         applicable: true,
       });
     }

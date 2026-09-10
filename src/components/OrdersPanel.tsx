@@ -132,7 +132,7 @@ function deliveryBadges(order: OrderRecord): { label: string; ok: boolean }[] {
   if (order.includeMobile && order.generateTestBuild) {
     badges.push({
       label: "APK",
-      ok: order.apkStatus === "success",
+      ok: order.apkStatus === "ready",
     });
   }
   return badges;

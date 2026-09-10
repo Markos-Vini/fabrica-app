@@ -1,5 +1,6 @@
 import type { DomainTemplateId } from "@/lib/domain-templates";
 import { domainTemplateBrief } from "@/lib/domain-templates";
+import type { OrderInput } from "@/lib/types";
 
 export const USER_ROLE_OPTIONS = [
   { id: "end_user", label: "Usuário final" },
@@ -43,7 +44,7 @@ export function parseOptionalText(raw: unknown, maxLen = 4000): string | null {
 }
 
 export function parseUserRolesFromForm(formData: FormData): string | null {
-  const selected = USER_ROLE_OPTIONS.filter(
+  const selected: string[] = USER_ROLE_OPTIONS.filter(
     (opt) => formData.get(`userRole_${opt.id}`) === "on",
   ).map((opt) => opt.label);
   const custom = String(formData.get("userRolesCustom") ?? "").trim();
@@ -53,7 +54,7 @@ export function parseUserRolesFromForm(formData: FormData): string | null {
 }
 
 export function parseScreensFromForm(formData: FormData): string | null {
-  const selected = SCREEN_OPTIONS.filter(
+  const selected: string[] = SCREEN_OPTIONS.filter(
     (opt) => formData.get(`screen_${opt.id}`) === "on",
   ).map((opt) => opt.label);
   const custom = String(formData.get("screensCustom") ?? "").trim();

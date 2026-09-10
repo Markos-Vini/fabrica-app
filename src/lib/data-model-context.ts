@@ -30,7 +30,7 @@ export type DataModelDefaults = {
 };
 
 export function parseMainEntitiesFromForm(formData: FormData): string | null {
-  const selected = ENTITY_OPTIONS.filter(
+  const selected: string[] = ENTITY_OPTIONS.filter(
     (opt) => formData.get(`entity_${opt.id}`) === "on",
   ).map((opt) => opt.label);
   const custom = String(formData.get("entitiesCustom") ?? "").trim();

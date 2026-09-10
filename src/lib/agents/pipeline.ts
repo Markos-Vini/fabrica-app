@@ -11,6 +11,7 @@ import { mergePlanningBaseline } from "@/lib/artifacts/planning-content";
 import { mergePlanningDocsForSoftware } from "@/lib/artifacts/merge-planning-software-docs";
 import { zipFiles } from "@/lib/artifacts/packager";
 import { parseGeneratedFiles } from "@/lib/artifacts/parse-files";
+import { slugify } from "@/lib/artifacts/slug";
 import {
   mergeRecoveredWorkspace,
   recoverOrderWorkspaceFiles,

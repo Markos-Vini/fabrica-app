@@ -1,3 +1,4 @@
+import type { OrderInput } from "@/lib/types";
 import { repairFlutterPubspec } from "./ensure-flutter-deps";
 
 export const FLUTTER_DEBUG_MANIFEST_PATH =

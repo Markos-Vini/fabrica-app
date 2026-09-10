@@ -95,7 +95,9 @@ export function loadReferencedJsonDumps(
     for (const root of searchRoots) {
       tryLoad(path.join(root, basename));
     }
-    tryLoad(path.join(process.cwd(), basename));
+    tryLoad(
+      path.join(/* turbopackIgnore: true */ process.cwd(), basename),
+    );
   }
 
   return out;
@@ -108,26 +110,32 @@ export function loadReferencedJsonDumps(
 export function recoverLegacyRootCodeFiles(
   order: OrderInput,
 ): Record<string, string> {
+  // Em serverless (Vercel) não há leftovers locais na raiz do deploy.
+  if (process.env.VERCEL) return {};
+
   const slug = slugify(order.name).toLowerCase();
   const marker = order.name.trim().toLowerCase();
   if (!slug && !marker) return {};
 
   const out: Record<string, string> = {};
-  const root = process.cwd();
+  const root = /* turbopackIgnore: true */ process.cwd();
 
   for (const folder of ["backend", "frontend", "mobile"] as const) {
-    const folderPath = path.join(root, folder);
-    if (!existsSync(folderPath)) continue;
+    const folderPath = path.join(/* turbopackIgnore: true */ root, folder);
+    if (!existsSync(/* turbopackIgnore: true */ folderPath)) continue;
 
     const markerFiles = [
-      path.join(folderPath, "package.json"),
-      path.join(folderPath, "pubspec.yaml"),
-      path.join(folderPath, "README.md"),
+      path.join(/* turbopackIgnore: true */ folderPath, "package.json"),
+      path.join(/* turbopackIgnore: true */ folderPath, "pubspec.yaml"),
+      path.join(/* turbopackIgnore: true */ folderPath, "README.md"),
     ];
     let belongs = false;
     for (const markerFile of markerFiles) {
-      if (!existsSync(markerFile)) continue;
-      const text = readFileSync(markerFile, "utf8").toLowerCase();
+      if (!existsSync(/* turbopackIgnore: true */ markerFile)) continue;
+      const text = readFileSync(
+        /* turbopackIgnore: true */ markerFile,
+        "utf8",
+      ).toLowerCase();
       if (text.includes(slug) || (marker && text.includes(marker))) {
         belongs = true;
         break;
@@ -188,16 +196,35 @@ export function recoverOrderWorkspaceFiles(
   const cwd = orderWorkspaceDir(orderId);
   const out: Record<string, string> = {};
 
-  Object.assign(out, loadJsonFilesDump(path.join(cwd, "mobile-output.json")));
-  Object.assign(out, loadJsonFilesDump(path.join(cwd, "frontend-output.json")));
+  Object.assign(
+    out,
+    loadJsonFilesDump(
+      path.join(/* turbopackIgnore: true */ cwd, "mobile-output.json"),
+    ),
+  );
+  Object.assign(
+    out,
+    loadJsonFilesDump(
+      path.join(/* turbopackIgnore: true */ cwd, "frontend-output.json"),
+    ),
+  );
 
   if (mode === "planning") {
-    Object.assign(out, walkTextFiles(path.join(cwd, "docs"), "docs"));
-    const readme = path.join(cwd, "README.md");
-    if (existsSync(readme)) {
-      out["README.md"] = readFileSync(readme, "utf8");
+    Object.assign(
+      out,
+      walkTextFiles(path.join(/* turbopackIgnore: true */ cwd, "docs"), "docs"),
+    );
+    const readme = path.join(/* turbopackIgnore: true */ cwd, "README.md");
+    if (existsSync(/* turbopackIgnore: true */ readme)) {
+      out["README.md"] = readFileSync(
+        /* turbopackIgnore: true */ readme,
+        "utf8",
+      );
     }
-    Object.assign(out, walkTextFiles(path.join(cwd, "tests"), "tests"));
+    Object.assign(
+      out,
+      walkTextFiles(path.join(/* turbopackIgnore: true */ cwd, "tests"), "tests"),
+    );
     return Object.fromEntries(
       Object.entries(out).filter(([filePath]) => isAllowedPlanningPath(filePath)),
     );
@@ -205,16 +232,37 @@ export function recoverOrderWorkspaceFiles(
 
   for (const prefix of CODE_PREFIXES) {
     const folder = prefix.slice(0, -1);
-    Object.assign(out, walkTextFiles(path.join(cwd, folder), folder));
+    Object.assign(
+      out,
+      walkTextFiles(
+        path.join(/* turbopackIgnore: true */ cwd, folder),
+        folder,
+      ),
+    );
   }
-  Object.assign(out, walkTextFiles(path.join(cwd, "docs"), "docs"));
-  Object.assign(out, walkTextFiles(path.join(cwd, "tests"), "tests"));
-  Object.assign(out, walkTextFiles(path.join(cwd, ".github"), ".github"));
+  Object.assign(
+    out,
+    walkTextFiles(path.join(/* turbopackIgnore: true */ cwd, "docs"), "docs"),
+  );
+  Object.assign(
+    out,
+    walkTextFiles(path.join(/* turbopackIgnore: true */ cwd, "tests"), "tests"),
+  );
+  Object.assign(
+    out,
+    walkTextFiles(
+      path.join(/* turbopackIgnore: true */ cwd, ".github"),
+      ".github",
+    ),
+  );
 
   for (const rootFile of ["README.md", "docker-compose.yml", ".env.example"] as const) {
-    const abs = path.join(cwd, rootFile);
-    if (existsSync(abs) && statSync(abs).isFile()) {
-      out[rootFile] = readFileSync(abs, "utf8");
+    const abs = path.join(/* turbopackIgnore: true */ cwd, rootFile);
+    if (
+      existsSync(/* turbopackIgnore: true */ abs) &&
+      statSync(/* turbopackIgnore: true */ abs).isFile()
+    ) {
+      out[rootFile] = readFileSync(/* turbopackIgnore: true */ abs, "utf8");
     }
   }
 

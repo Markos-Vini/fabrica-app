@@ -84,7 +84,7 @@ export type IntegrationDefaults = {
 };
 
 export function parseIntegrationsFromForm(formData: FormData): string | null {
-  const selected = INTEGRATION_OPTIONS.filter(
+  const selected: string[] = INTEGRATION_OPTIONS.filter(
     (opt) => formData.get(`integration_${opt.id}`) === "on",
   ).map((opt) => opt.label);
   const custom = String(formData.get("integrationsCustom") ?? "").trim();

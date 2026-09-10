@@ -3,7 +3,13 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export function orderWorkspaceDir(orderId: string): string {
-  return path.join(process.cwd(), "storage", "orders", orderId, "workspace");
+  return path.join(
+    /* turbopackIgnore: true */ process.cwd(),
+    "storage",
+    "orders",
+    orderId,
+    "workspace",
+  );
 }
 
 export async function ensureOrderWorkspace(orderId: string): Promise<string> {

@@ -35,7 +35,7 @@ import {
   validateDemoReadiness,
 } from "@/lib/artifacts/demo-readiness";
 import { getPublicSettings } from "@/lib/settings";
-import { getOrder, updateOrder } from "@/lib/store";
+import { getOrder, updateOrder, type OrderRecord } from "@/lib/store";
 import type { OrderInput } from "@/lib/types";
 
 /** Mescla arquivos do disco/dumps JSON na árvore coletada do pedido de software. */
@@ -58,7 +58,7 @@ export async function repairSoftwareDelivery(
     return { ok: false, error: "Reparo só se aplica a pedidos de software." };
   }
 
-  const order = loaded.order as OrderInput;
+  const order = loaded.order as OrderRecord;
   let collected = { ...(await loadCollectedFiles(orderId)) };
 
   const agentOutputs = loaded.runs
