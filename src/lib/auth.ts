@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { SESSION_COOKIE, SESSION_MAX_AGE_MS } from "@/lib/session-constants";
 
-export const SESSION_COOKIE = "fabrica_session";
-export const SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+export { SESSION_COOKIE, SESSION_MAX_AGE_MS };
 
 export function checkPassword(input: string, expected: string): boolean {
   if (!input || !expected) return false;

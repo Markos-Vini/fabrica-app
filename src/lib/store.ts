@@ -19,6 +19,7 @@ import {
 } from "@/lib/nfr-context";
 import type { FactoryMode, OrderKind } from "@/lib/factory-mode";
 import { inferOrderKind } from "@/lib/factory-mode";
+import { fabricaDataDir } from "@/lib/data-paths";
 import { withStoreFileLock, writeJsonAtomic } from "@/lib/store-lock";
 
 export type OrderStatus = "queued" | "running" | "completed" | "failed";
@@ -97,11 +98,10 @@ type StoreData = {
   runs: AgentRunRecord[];
 };
 
-const DATA_DIR = path.join(process.cwd(), "data");
 function getDataFile(): string {
   return process.env.FABRICA_DATA_FILE
     ? path.resolve(process.env.FABRICA_DATA_FILE)
-    : path.join(DATA_DIR, "fabrica.json");
+    : path.join(fabricaDataDir(), "fabrica.json");
 }
 
 function nowIso(): string {

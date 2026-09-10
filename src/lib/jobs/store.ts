@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
+import { fabricaDataDir } from "@/lib/data-paths";
 import { getOrder } from "@/lib/store";
 import type { EnqueueInput, JobRecord, JobStatus, JobType } from "./types";
 
@@ -17,8 +18,9 @@ type DeliveryOrderHint = {
 
 type JobsData = { jobs: JobRecord[] };
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const JOBS_FILE = path.join(DATA_DIR, "jobs.json");
+function jobsFilePath(): string {
+  return path.join(fabricaDataDir(), "jobs.json");
+}
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -37,11 +39,12 @@ let queue: Promise<unknown> = Promise.resolve();
 
 async function readJobs(): Promise<JobsData> {
   if (cache) return cache;
-  if (!existsSync(JOBS_FILE)) {
+  const file = jobsFilePath();
+  if (!existsSync(file)) {
     cache = emptyJobs();
     return cache;
   }
-  const raw = await readFile(JOBS_FILE, "utf8");
+  const raw = await readFile(file, "utf8");
   const parsed = JSON.parse(raw) as JobsData;
   parsed.jobs = parsed.jobs ?? [];
   cache = parsed;
@@ -50,8 +53,17 @@ async function readJobs(): Promise<JobsData> {
 
 async function writeJobs(data: JobsData): Promise<void> {
   cache = data;
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(JOBS_FILE, JSON.stringify(data, null, 2), "utf8");
+  try {
+    const dir = fabricaDataDir();
+    await mkdir(dir, { recursive: true });
+    await writeFile(jobsFilePath(), JSON.stringify(data, null, 2), "utf8");
+  } catch (error) {
+    if (process.env.VERCEL) {
+      console.warn("[fabrica-jobs] persistência em disco indisponível; só memória", error);
+      return;
+    }
+    throw error;
+  }
 }
 
 function locked<T>(fn: () => Promise<T>): Promise<T> {
@@ -315,4 +327,4 @@ export function resetJobsCacheForTests(): void {
   cache = null;
 }
 
-export { JOBS_FILE };
+export { jobsFilePath as JOBS_FILE };

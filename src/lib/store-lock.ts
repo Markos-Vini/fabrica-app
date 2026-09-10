@@ -18,7 +18,14 @@ export async function withStoreFileLock<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   const lockPath = `${dataFile}.lock`;
-  await mkdir(path.dirname(dataFile), { recursive: true });
+  try {
+    await mkdir(path.dirname(dataFile), { recursive: true });
+  } catch (error) {
+    if (process.env.VERCEL) {
+      return fn();
+    }
+    throw error;
+  }
   const started = Date.now();
 
   for (;;) {
@@ -48,6 +55,9 @@ export async function withStoreFileLock<T>(
         error && typeof error === "object" && "code" in error
           ? String((error as { code: unknown }).code)
           : "";
+      if (code === "EROFS" || code === "EACCES") {
+        return fn();
+      }
       if (code !== "EEXIST") throw error;
       if (Date.now() - started > LOCK_WAIT_MS) {
         throw new Error("Timeout ao obter trava do store da Fábrica.");
@@ -62,8 +72,19 @@ export async function writeJsonAtomic(
   filePath: string,
   data: unknown,
 ): Promise<void> {
-  await mkdir(path.dirname(filePath), { recursive: true });
-  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
-  await writeFile(tempPath, JSON.stringify(data, null, 2), "utf8");
-  await rename(tempPath, filePath);
+  try {
+    await mkdir(path.dirname(filePath), { recursive: true });
+    const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+    await writeFile(tempPath, JSON.stringify(data, null, 2), "utf8");
+    await rename(tempPath, filePath);
+  } catch (error) {
+    if (process.env.VERCEL) {
+      console.warn(
+        "[fabrica-store] gravação em disco indisponível; estado só em memória",
+        error,
+      );
+      return;
+    }
+    throw error;
+  }
 }

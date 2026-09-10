@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import {
-  JOBS_FILE,
+  JOBS_FILE as jobsFile,
   enqueueJob as persistJob,
   listJobsForOrder,
   resetJobsCacheForTests,
@@ -17,13 +17,15 @@ describe("job worker", () => {
   beforeEach(async () => {
     resetJobsCacheForTests();
     resetJobHandlersForTests();
-    if (existsSync(JOBS_FILE)) await rm(JOBS_FILE, { force: true });
+    const file = jobsFile();
+    if (existsSync(file)) await rm(file, { force: true });
   });
 
   afterEach(async () => {
     resetJobsCacheForTests();
     resetJobHandlersForTests();
-    if (existsSync(JOBS_FILE)) await rm(JOBS_FILE, { force: true });
+    const file = jobsFile();
+    if (existsSync(file)) await rm(file, { force: true });
   });
 
   it("executa handler registrado e marca job como completed", async () => {

@@ -9,7 +9,7 @@ import {
   enqueueJob,
   finishJob,
   hasActiveJob,
-  JOBS_FILE,
+  JOBS_FILE as jobsFile,
   reconcileDeliveryJobs,
   recoverStaleJobs,
   resetJobsCacheForTests,
@@ -18,12 +18,14 @@ import {
 describe("jobs store", () => {
   beforeEach(async () => {
     resetJobsCacheForTests();
-    if (existsSync(JOBS_FILE)) await rm(JOBS_FILE, { force: true });
+    const file = jobsFile();
+    if (existsSync(file)) await rm(file, { force: true });
   });
 
   afterEach(async () => {
     resetJobsCacheForTests();
-    if (existsSync(JOBS_FILE)) await rm(JOBS_FILE, { force: true });
+    const file = jobsFile();
+    if (existsSync(file)) await rm(file, { force: true });
   });
 
   it("enfileira e processa jobs em ordem FIFO", async () => {
@@ -64,9 +66,9 @@ describe("jobs store", () => {
   it("persiste jobs em data/jobs.json", async () => {
     await enqueueJob({ type: "apk", orderId: "order-z" });
     resetJobsCacheForTests();
-    expect(existsSync(JOBS_FILE)).toBe(true);
+    expect(existsSync(jobsFile())).toBe(true);
     expect(await hasActiveJob("order-z", "apk")).toBe(true);
-    expect(path.basename(JOBS_FILE)).toBe("jobs.json");
+    expect(path.basename(jobsFile())).toBe("jobs.json");
   });
 
   it("cancela jobs pendentes ou em execução de um pedido", async () => {
@@ -90,11 +92,11 @@ describe("jobs store", () => {
 
   it("reconcile falha jobs pending antigos", async () => {
     await enqueueJob({ type: "publish", orderId: "order-stale" });
-    const data = JSON.parse(await readFile(JOBS_FILE, "utf8")) as {
+    const data = JSON.parse(await readFile(jobsFile(), "utf8")) as {
       jobs: Array<{ createdAt: string }>;
     };
     data.jobs[0]!.createdAt = new Date(Date.now() - 3 * 60 * 1000).toISOString();
-    await writeFile(JOBS_FILE, JSON.stringify(data, null, 2));
+    await writeFile(jobsFile(), JSON.stringify(data, null, 2));
     resetJobsCacheForTests();
 
     const count = await reconcileDeliveryJobs("order-stale");
@@ -106,11 +108,11 @@ describe("jobs store", () => {
     const orderId = "order-delivered";
     const deliveredAt = new Date().toISOString();
     await enqueueJob({ type: "publish", orderId });
-    const data = JSON.parse(await readFile(JOBS_FILE, "utf8")) as {
+    const data = JSON.parse(await readFile(jobsFile(), "utf8")) as {
       jobs: Array<{ createdAt: string }>;
     };
     data.jobs[0]!.createdAt = new Date(Date.now() - 60_000).toISOString();
-    await writeFile(JOBS_FILE, JSON.stringify(data, null, 2));
+    await writeFile(jobsFile(), JSON.stringify(data, null, 2));
     resetJobsCacheForTests();
 
     const count = await reconcileDeliveryJobs(orderId, {

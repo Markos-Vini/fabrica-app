@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { verifySessionTokenEdge } from "@/lib/auth-edge";
 import { sessionSecret } from "@/lib/env";
 import { isPublicPath } from "@/lib/public-paths";
+import { SESSION_COOKIE } from "@/lib/session-constants";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value ?? "";
-  if (verifySessionToken(token, sessionSecret())) {
+  if (await verifySessionTokenEdge(token, sessionSecret())) {
     return NextResponse.next();
   }
 
