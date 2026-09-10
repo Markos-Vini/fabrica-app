@@ -135,10 +135,13 @@ function emptyStore(): StoreData {
   };
 }
 
+const BOOTSTRAP_ADMIN_ID = "fabrica-admin";
+
 function bootstrapAdminUser(): UserRecord {
   const stamp = nowIso();
   return {
-    id: cuid(),
+    // Id estável — na Vercel cada instância recria o JSON; id aleatório quebrava a sessão.
+    id: BOOTSTRAP_ADMIN_ID,
     email: adminEmail().toLowerCase(),
     name: "Administrador",
     passwordHash: hashPassword(adminPassword()),
@@ -147,6 +150,27 @@ function bootstrapAdminUser(): UserRecord {
     createdAt: stamp,
     updatedAt: stamp,
   };
+}
+
+function ensureBootstrapAdmin(users: UserRecord[]): UserRecord[] {
+  const email = adminEmail().toLowerCase();
+  const byId = users.find((user) => user.id === BOOTSTRAP_ADMIN_ID);
+  if (byId) {
+    byId.email = email;
+    byId.role = "admin";
+    byId.active = true;
+    return users;
+  }
+
+  const byEmail = users.find((user) => user.email === email);
+  if (byEmail) {
+    byEmail.id = BOOTSTRAP_ADMIN_ID;
+    byEmail.role = "admin";
+    byEmail.active = true;
+    return users;
+  }
+
+  return [...users, bootstrapAdminUser()];
 }
 
 function normalizeStore(parsed: StoreData): StoreData {
@@ -161,9 +185,7 @@ function normalizeStore(parsed: StoreData): StoreData {
   parsed.orders = parsed.orders ?? [];
   parsed.runs = parsed.runs ?? [];
 
-  if (parsed.users.length === 0) {
-    parsed.users.push(bootstrapAdminUser());
-  }
+  parsed.users = ensureBootstrapAdmin(parsed.users);
 
   const fallbackUserId =
     parsed.users.find((user) => user.role === "admin")?.id ?? parsed.users[0]?.id;
